@@ -1,7 +1,11 @@
 ﻿'''Check for free names of a given (or shorter) length.
 
-It works via Selenium which login with your login-password.
+It works via Selenium which sign in with your login-password.
 Each iteration has 1 second sleep otherwise there is a risk of being blocked.
+Don't forget to download web-driver (https://github.com/mozilla/geckodriver/releases for FF)
+Full cycle with (3,0) args and 1s sleep takes at least 14 hours.
+                (4,4) args and 1s sleep takes at least 20.5 days ¯\_(ツ)_/¯
+You can change "symbs" list to separate full cycle into parts.
 Input: [
         max_length: int (default&recomended – 3);
         min_length: int (default – 0). Make sence if you've
@@ -87,10 +91,13 @@ def check_nickname(nn: str):
                         break
                     else:
                         print("ALARMA: " + result_message.text)
-            check_nickname(nn + f)
+                check_nickname(nn + f)
+            elif nn[-1] != '-':
+                check_nickname(nn + f)
     elif len(nn) < s:
         for f in n_symbs:
-            check_nickname(nn + f)
+            if not all(nn[-1] == '-' == f):
+                check_nickname(nn + f)
 
 
 for i in symbs:
