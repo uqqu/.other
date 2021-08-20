@@ -1,0 +1,4 @@
+﻿*.exe
+*.log
+*.txt
+!github_short_username_tester\available.txt
