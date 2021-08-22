@@ -4,7 +4,7 @@ It works via Selenium which sign in with your login-password.
 Each iteration has 1 second sleep otherwise there is a risk of being blocked.
 Don't forget to download web-driver (https://github.com/mozilla/geckodriver/releases for FF)
 Full cycle with (3,0) args and 1s sleep takes at least 14 hours.
-                (4,4) args and 1s sleep takes at least 20.5 days ¯\_(ツ)_/¯
+                (4,4) args and 1s sleep takes at least 20.5 days ¯|_(ツ)_/¯
 You can change "symbs" list to separate full cycle into parts.
 Input: [
         max_length: int (default&recomended – 3);
@@ -17,15 +17,15 @@ Output: [
     ]
 '''
 
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-
 from os import environ
 from sys import argv
 from time import sleep
+
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 
 symbs: list = [chr(x) for x in range(97, 123)] + [chr(x) for x in range(48, 58)]
@@ -64,7 +64,7 @@ result_message = driver.find_element_by_xpath("//p[@class='note']")
 
 
 def check_nickname(nn: str):
-    global nickname_field, result_message, s, e, n_symbs
+    '''Recursive main function to check nickname availability.'''
     if e - 1 <= len(nn) < s:
         for f in n_symbs:
             if f != '-':
@@ -78,18 +78,17 @@ def check_nickname(nn: str):
                             file.write(nn + f + '\n')
                         print(result_message.text)
                         break
-                    elif (
+                    if (
                         result_message.text[: 28 + len(nn)]
                         == "Username '" + nn + f + "' is unavailable."
                     ):
                         break
-                    elif (
+                    if (
                         result_message.text[: 28 + len(nn)]
                         == "Username " + nn + f + " is not available."
                     ):
                         break
-                    else:
-                        print("ALARMA: " + result_message.text)
+                    print("ALARMA: " + result_message.text)
                 check_nickname(nn + f)
             elif nn[-1] != '-':
                 check_nickname(nn + f)
