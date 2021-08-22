@@ -8,8 +8,9 @@ Full cycle with (3,0) args and 1s sleep takes at least 14 hours.
 You can change "symbs" list to separate full cycle into parts.
 Input: [
         max_length: int (default&recomended – 3);
-        min_length: int (default – 0). Make sence if you've
-                    already completed (3,0) and want to start (4,4).
+        min_length: int (default – 0). It makes sense if you've
+                    already completed (3,0) and want to start (4,4);
+        start_nn: str (default 'a'). Skip all values that are less than this attribute.
     ]
 Output: [
         realtime print available nicknames, errors (long responce);
@@ -31,8 +32,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 symbs: list = [chr(x) for x in range(97, 123)] + [chr(x) for x in range(48, 58)]
 n_symbs: list = [chr(x) for x in range(97, 123)] + [chr(x) for x in range(48, 58)] + ['-']
 
-s = int(argv[1]) if len(argv) > 1 else 3
-e = int(argv[2]) if len(argv) > 2 else 0
+max_length = int(argv[1]) if len(argv) > 1 else 3
+min_length = int(argv[2]) if len(argv) > 2 else 0
+first_value = str(argv[3]) if len(argv) > 3 else 'a'
 
 driver = webdriver.Firefox()
 driver.get("https://github.com/settings/admin")
@@ -65,37 +67,37 @@ result_message = driver.find_element_by_xpath("//p[@class='note']")
 
 def check_nickname(nn: str):
     '''Recursive main function to check nickname availability.'''
-    if e - 1 <= len(nn) < s:
-        for f in n_symbs:
-            if f != '-':
+    if min_length - 1 <= len(nn) < max_length:
+        for symbol in n_symbs:
+            if symbol != '-' and first_value <= nn + symbol:
                 nickname_field.send_keys(Keys.CONTROL, 'a')
                 nickname_field.send_keys(Keys.DELETE)
-                nickname_field.send_keys(nn + f)
+                nickname_field.send_keys(nn + symbol)
                 while True:
                     sleep(1)
-                    if result_message.text == nn + f + " is available.":
+                    if result_message.text == nn + symbol + " is available.":
                         with open('available.txt', 'a') as file:
-                            file.write(nn + f + '\n')
+                            file.write(nn + symbol + '\n')
                         print(result_message.text)
                         break
                     if (
                         result_message.text[: 28 + len(nn)]
-                        == "Username '" + nn + f + "' is unavailable."
+                        == "Username '" + nn + symbol + "' is unavailable."
                     ):
                         break
                     if (
                         result_message.text[: 28 + len(nn)]
-                        == "Username " + nn + f + " is not available."
+                        == "Username " + nn + symbol + " is not available."
                     ):
                         break
                     print("ALARMA: " + result_message.text)
-                check_nickname(nn + f)
+                check_nickname(nn + symbol)
             elif nn[-1] != '-':
-                check_nickname(nn + f)
-    elif len(nn) < s:
-        for f in n_symbs:
-            if not all(nn[-1] == '-' == f):
-                check_nickname(nn + f)
+                check_nickname(nn + symbol)
+    elif len(nn) < max_length:
+        for symbol in n_symbs:
+            if not all(nn[-1] == '-' == symbol):
+                check_nickname(nn + symbol)
 
 
 for i in symbs:
