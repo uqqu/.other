@@ -29,8 +29,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 
-symbs: list = [chr(x) for x in range(97, 123)] + [chr(x) for x in range(48, 58)]
-n_symbs: list = [chr(x) for x in range(97, 123)] + [chr(x) for x in range(48, 58)] + ['-']
+symbs: list = [chr(x) for x in range(97, 123)]
+# symbs: list = [chr(x) for x in range(97, 123)] + [chr(x) for x in range(48, 58)]
+n_symbs: list = [chr(x) for x in range(97, 123)] + ['-']
 
 max_length = int(argv[1]) if len(argv) > 1 else 3
 min_length = int(argv[2]) if len(argv) > 2 else 0
@@ -96,7 +97,7 @@ def check_nickname(nn: str):
                 check_nickname(nn + symbol)
     elif len(nn) < max_length:
         for symbol in n_symbs:
-            if not all(nn[-1] == '-' == symbol):
+            if nn[-1] != '-' or symbol != '-':
                 check_nickname(nn + symbol)
 
 
