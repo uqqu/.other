@@ -1,4 +1,4 @@
-﻿'''Check for free names of a given (or shorter) length.
+'''Check for free names of a given (or shorter) length.
 
 It works via Selenium which sign in with your login-password.
 Each iteration has 1 second sleep otherwise there is a risk of being blocked.
@@ -29,13 +29,12 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 
-symbs: list = [chr(x) for x in range(97, 123)]
-# symbs: list = [chr(x) for x in range(97, 123)] + [chr(x) for x in range(48, 58)]
-n_symbs: list = [chr(x) for x in range(97, 123)] + ['-']
+symbs: list = [chr(x) for x in range(97, 123)] + [chr(x) for x in range(48, 58)]
+n_symbs: list = symbs + ['-']
 
 max_length = int(argv[1]) if len(argv) > 1 else 3
 min_length = int(argv[2]) if len(argv) > 2 else 0
-first_value = str(argv[3]) if len(argv) > 3 else 'a'
+first_value = str(argv[3]) if len(argv) > 3 else '0'
 
 driver = webdriver.Firefox()
 driver.get("https://github.com/settings/admin")
@@ -89,6 +88,10 @@ def check_nickname(nn: str):
                     if (
                         result_message.text[: 28 + len(nn)]
                         == "Username " + nn + symbol + " is not available."
+                    ):
+                        break
+                    if (
+                        result_message.text == "Username must be different."
                     ):
                         break
                     print("ALARMA: " + result_message.text)

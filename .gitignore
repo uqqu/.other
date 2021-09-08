@@ -1,4 +1,6 @@
-﻿*.exe
+﻿.gitignore
+*.exe
 *.log
 *.txt
-!github_short_username_tester\available.txt
+!github_short_username_tester/available 3.txt
+!github_short_username_tester/available (4 cutted).txt
