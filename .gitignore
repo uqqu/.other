@@ -2,6 +2,6 @@
 *.exe
 *.log
 *.txt
-!github_short_username_tester/available 3.txt
-!github_short_username_tester/available (4 cutted).txt
-!github_short_username_tester/results.txt
+!github_short_usernames/available 3.txt
+!github_short_usernames/available (4 cutted).txt
+!github_short_usernames/results.txt
