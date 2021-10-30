@@ -1,4 +1,4 @@
-﻿""" Config for stable nvim-qt v0.5.1/unstable v0.6 //27-10-2021
+﻿""" Config for stable nvim-qt v0.5.1/unstable v0.6 //30-10-2021
 "1. Plugins
 "2. Global_set's
 "3. autocmd
@@ -7,12 +7,18 @@
 "6. Mapping
 
 "§ Plugins
-call plug#begin(stdpath('data') . '/plugged')
+call plug#begin(stdpath('data') . '/plugged') "order by service, author name, repo name
     Plug 'dense-analysis/ale' "linter/fixer/...
     Plug 'easymotion/vim-easymotion' "search-jump movement
+    Plug 'ehamberg/vim-cute-python' "conceal some python operators
+    Plug 'godlygeek/tabular' "line up text
+    Plug 'honza/vim-snippets' "snippets ¯\_(ツ)_/¯
+        Plug 'SirVer/ultisnips' "snippet engine
     Plug 'konfekt/fastfold' "fix folding
     Plug 'mhinz/vim-startify' "startpage
     Plug 'numirias/semshi', {'do': ':UpdateRemotePlugins'} "semantic highlighting for Python
+    Plug 'plasticboy/vim-markdown' "improve MD highlighting, conceal, folding
+    Plug 'raimondi/delimitmate' "brackets autocomplete
     Plug 'sainnhe/everforest' "colorscheme
     Plug 'terryma/vim-expand-region' "visually select increasingly larger/smaller regions
     Plug 'tpope/vim-commentary' "fast commenting plugin
@@ -20,7 +26,7 @@ call plug#begin(stdpath('data') . '/plugged')
     Plug 'tpope/vim-surround' "add surround operator (eg: ds', cs'[, ysiW', yss'[ (before remap))
     Plug 'vim-airline/vim-airline' "statusbar/tabbar plugin
         Plug 'bling/vim-bufferline' "TEMPORARY
-        Plug 'ryanoasis/vim-devicons' "adds filetype glyphs
+        Plug 'ryanoasis/vim-devicons' "add filetype glyphs
         Plug 'vim-airline/vim-airline-themes' "style themes
     Plug 'yuttie/comfortable-motion.vim' "smooth scrolling on (half)page up/down
     Plug 'https://gitlab.com/code-stats/code-stats-vim.git' "plugin for Code::Stats service
@@ -36,11 +42,11 @@ set cursorline "highlight current line
 set list listchars=tab:——\ ,extends:›,precedes:‹,nbsp:·,trail: "display auxiliary symbols
 set showmatch "temporarily highlight opening bracket when typed a closing
 set scrolloff=6 "keep at least 6 lines between current line and top/bottom of the screen
-set visualbell "need to test "use visual bell instead of beeping
 set linebreak "line break by words, not by characters
 set textwidth=98 "used by formatoptions 't','c'. 'formatoptions' controlled by ???; has auto\n
 set completeopt=menuone,preview,noinsert "autocomplete menu (see :h)
 set linespace=1 "number of pixel lines inserted between characters. depends on the current font
+set conceallevel=2 "h: concealed text is hidden unless it has a custom replacement character
 
 " key behavior
 set mouse=a "enable mouse for all modes
@@ -52,29 +58,29 @@ set virtualedit=onemore "allow to move just past the end of the line
 set virtualedit+=block "cursor can be positioned where there is no actual character in Block VM
 set matchpairs=<:>,(:),[:],{:} " %-movement; extra pairs '"` provided by 'vim-matchquote' plugin
             \ "also work for c-style /*comments*/ and '#if, ..., #endif' multiline conditions
-            \ " ...but it bugged :c
+            \ " ...but this plugin assignments cannot be remapped :c
 
 " sessions
-set sessionoptions=tabpages,folds "do not save blank,buffers,curdir,help,winsize between sessions
+set sessionoptions=tabpages,folds,curdir "do not save blank,buffers,help,winsize between sessions
 set undofile "save history of buffer changes between sessions
 set confirm "show confirm dialog instead error when closing with unsaved changes
 
 " tabs/indents
-set tabstop=4 "1 indent level = 4<Space>; 'set listchars' transform 4<Space> to set 'tab' value
+set tabstop=4 "1 indent level = 4<Space>
 set shiftwidth=4 "1 autoindent level = 4<Space>
 set softtabstop=4 "1<Tab> press send equal 4<Space>
 set expandtab "use <Tab> as n<Space>
 
 " folds
 set foldlevel=3 "folds with a higher level will be closed
-set foldcolumn=auto:2 "autosize left fold-column; max 2
+set foldcolumn=auto:3 "autosize left fold-column; max 3
 set foldignore= "disable default unfolding lines which start with '#'
 
 " other
 set ignorecase smartcase "ignore case in search patterns (only if all characters are lowercase)
 set spelllang=en_us,ru_yo "set internal en_US and ru_ё spell check without enabling
 set spellfile=./utf-8.add "enable separate good/bad list for each file
-set omnifunc=syntaxcomplete#Complete
+" set omnifunc=syntaxcomplete#Complete " TODO
 
 " other not 'set's
 syntax on
@@ -99,7 +105,7 @@ autocmd BufEnter,BufRead,BufNewFile *.vim silent! execute 'unmap <buffer> [['
 autocmd VimLeave * if &ft != 'startify' | try | bd! term | catch | | endtry
             \ | exe 'mksession! ' . $VIM . '\last_session.vim' | endif
 
-" two fold methods simultaneously cheat
+" two fold methods simultaneously cheat " TODO
 autocmd BufReadPre * setlocal foldmethod=syntax
 autocmd BufWinEnter * if &foldmethod == 'syntax' | setlocal foldmethod=manual | endif
 
@@ -111,9 +117,8 @@ autocmd VimLeave * silent execute '!del "' . $VIM . '\\servername.txt"'
 autocmd User ALEFixPost execute('Semshi highlight')
 autocmd BufWritePost *.bat,*.cmd silent execute 'w! ++enc=cp1250'
 autocmd VimEnter * call GuiWindowFullScreen(1) | call PluginMappings()
-            \ "fullscreen on enter; remap plugin mappings
-autocmd BufWinEnter *.txt if &filetype == 'help' | wincmd L | endif "open help on right split
-autocmd BufAdd * call timer_start(166, {-> execute('if &bt == "terminal" | set nospell')})
+autocmd BufWinEnter *.txt if &filetype == 'help' | wincmd L
+            \ | execute 'map <silent><buffer> q :q<CR>' | endif
 autocmd BufAdd * call timer_start(166, {-> execute(
             \ 'if len(getbufinfo({"buflisted":1})) > tabpagenr("$")
             \ && &bt == "" && &ft[:2] != "ale" | tab ball')})
@@ -125,7 +130,7 @@ autocmd BufAdd * call timer_start(166, {-> execute(
 let g:everforest_background = 'soft'
 let g:everforest_disable_italic_comment = 1
 let g:everforest_better_perfomace = 1
-"'need to test' group "coc;vim-lsp;ycm;ale;syntastic
+"'need to test' group "coc;vim-lsp;ycm;ale;syntastic TODO
     let g:everforest_diagnostic_text_highlight = 0
     let g:everforest_diagnostic_line_highlight = 0
     let g:everforest_diagnostic_virtual_text = 'colored'
@@ -133,13 +138,10 @@ let g:everforest_better_perfomace = 1
 colorscheme everforest "(define colorsheme after it's settings)
 
 " startify
-let g:startify_bookmarks = [
-            \   {'p': 'C:\Scripts\layout\qphyx.ahk'},
-            \   {'h': 'C:\Scripts\layout\menu.ahk'},
-            \   {'y': $LOCALAPPDATA . '\nvim\init.vim'},
-            \   {'x': 'C:\Scripts\'},
-            \   {'z': 'C:\proj\phonotext\v2\phonotext\'},
-            \ ]
+let g:startify_bookmarks = []
+for line in readfile($VIM . '\bookmarks.txt')
+    call add(g:startify_bookmarks, json_decode(line))
+endfor
 let g:startify_commands = [
             \   {'l': [' Last session', 'call LoadSession()']},
             \ ]
@@ -165,7 +167,7 @@ let g:airline_section_x = airline#section#create_right(['tagbar', 'filetype', '%
 let g:Powerline_symbols = 'unicode'
 let g:airline_extensions = ['ale', 'tabline', 'whitespace', 'wordcount'] "stable
 let g:airline_extensions += ['bufferline'] "temporary
-"'future test' group
+"'future test' group " TODO
     "let g:airline_extensions += ['branch' (fugitive,gina), 'fugitiveline', 'coc', 'syntastic',
             \ "'omniSharp', 'poet-v', 'battery', 'undotree', 'vim-virtualenv', 'ycm'] uncategor.
     "let g:airline_extensions +=
@@ -208,8 +210,8 @@ let g:ale_python_pydocstyle_options = '--ignore=D105,D107,D203,D213,D300'
             \ "D105 – Missing docstring in magic method;
             \ "D107 – Missing docstring in __init__;
             \ "fix conflicting D203-D211 and D212-D213;
-            \ "D203-D211 – [1/No] blank line[/s] [required/allowed] before class docstring;
-            \ "D212-D213 – Multi-line docstring summary should start at the [first/second] line;
+            \ "D203/D211 – [1/No] blank line[/s] [required/allowed] before class docstring;
+            \ "D212/D213 – Multi-line docstring summary should start at the [first/second] line;
             \ "D300 − Use “””triple double quotes”””.
 let g:ale_python_pylint_use_msg_id = 1
 let g:ale_python_pylint_options =
@@ -217,7 +219,7 @@ let g:ale_python_pylint_options =
             \ . '--persistent n'
             \ "C0103 – Constant name ... doesn't conform to UPPER_CASE naming style;
             \   "but C0103 react on local 'temporarily-constants' which aren't really constants;
-            \ "C0411 – Standard import 'from ...' should be placed before 'import ...'
+            \ "C0411 – Standard import 'from ...' should be placed before 'import ...';
             \ "W1203 – Use %s formatting in logging functions;
             \ "Add flask and flask-sqlalchemy support;
             \ "Disable incorrect generation .stats files.
@@ -236,17 +238,21 @@ let g:ale_python_black_options =
             \ "disable comma after last list element; \\it doesn't work?
             \ "set line length.
 
-" other
-let g:expand_region_text_objects = {
-            \ 'iw': 0, 'iW': 0, 'i"': 1, 'i''': 1, 'i]': 1,
-            \ 'ib': 1, 'iB': 1, 'il': 1, 'ip': 1, 'ie': 0,
-            \ }
-let g:codestats_api_key = $CODESTATS_API_KEY
+" easy motion
 let g:EasyMotion_keys = 'EAOIUMSTRNCQPHYWDLVJKGFB'
 let g:EasyMotion_do_mapping = 0
 let g:EasyMotion_use_upper = 1
 let g:EasyMotion_smartcase = 1
+
+" other
+let g:UltiSnipsExpandTrigger="<Tab>"
+let g:UltiSnipsJumpForwardTrigger="<Tab>"
 let g:bufferline_echo = 0 "disable additional echo on the command-line
+let g:codestats_api_key = $CODESTATS_API_KEY
+let g:expand_region_text_objects = {
+            \ 'iw': 0, 'iW': 0, 'i"': 1, 'i''': 1, 'i]': 1,
+            \ 'ib': 1, 'iB': 1, 'il': 1, 'ip': 1, 'ie': 0,
+            \ }
 let g:WebDevIconsUnicodeDecorateFileNodesPatternSymbols = {
             \   '.ahk*': '',
             \   '.py*': '',
@@ -265,6 +271,7 @@ function LoadSession()
 endfunction
 
 function DeleteEmptyBuffers()
+    """Called from LoadSession() to avoid empty buffers bug on load."""
     let [i, n; empty] = [1, bufnr('$')]
     while i <= n
         if bufexists(i) && bufname(i) == ''
@@ -279,7 +286,7 @@ endfunction
 
 let s:is_maximized = 1
 function MaximizeToggle()
-    """Toggle fullscreen mode. Mapped on <F11>"""
+    """Toggle fullscreen mode. Mapped on <F11>."""
     let s:is_maximized = !s:is_maximized
     call GuiWindowFullScreen(s:is_maximized)
 endfunction
@@ -292,7 +299,7 @@ function OpacityToggle()
 endfunction
 
 function UnMinify()
-    """Restore minified files to exploitable view. Not mapped, call directly."""
+    """Restore minified files to exploitable view. Not mapped, call this directly."""
     %s/{\ze[^\r\n]/{\r/g
     %s/){/) {/g
     %s/};\?\ze[^\r\n]/\0\r/g
@@ -312,6 +319,7 @@ function PluginMappings()
     execute 'nmap ha' maparg('ys', 'n')
     execute 'nmap hao' maparg('yss', 'n')
     unmap [z
+    unmap [%
     unmap ys
     unmap yS
     unmap yss
@@ -327,6 +335,7 @@ function PluginMappings()
     unmap gc
     unmap gcu
     unmap gcc
+    unmap g%
     unmap +
     unmap <C-a>
     unmap <C-x>
@@ -363,9 +372,13 @@ command Term below split | resize 20 | term
 map <F11> :call MaximizeToggle()<CR>
 tnoremap <Esc> <C-\><C-n>
 
+" right click context menu (copy-cut-paste)
+nnoremap <silent><RightMouse> :call GuiShowContextMenu()<CR>
+inoremap <silent><RightMouse> <Esc>:call GuiShowContextMenu()<CR>
+vnoremap <silent><RightMouse> :call GuiShowContextMenu()<CR>gv
+
 " disable basic mappings
 map * <nop>
-map < <nop>
 map { <nop>
 map ; <nop>
 map ` <nop>
@@ -395,70 +408,127 @@ map <Bar> <nop>
 map kv <nop>
 vmap q <nop>
 vmap y <nop>
-map <A-Enter> <nop>
+map <A-CR> <nop>
 map  <nop>
-
-" right click context menu (copy-cut-paste)
-nnoremap <silent><RightMouse> :call GuiShowContextMenu()<CR>
-inoremap <silent><RightMouse> <Esc>:call GuiShowContextMenu()<CR>
-vnoremap <silent><RightMouse> :call GuiShowContextMenu()<CR>gv
 
 " movement
 noremap m h
 noremap M b
+"" noremap % ^ " PM()
 noremap <Left> B
 noremap s j
 noremap t k
 noremap r l
 noremap R w
+noremap , $l
 noremap <Right> W
-noremap , $
-noremap n t
-noremap N T
+noremap n f
+noremap N F
 noremap l %
 noremap c ;
 noremap C ,
+noremap <CR> +
+noremap <S-CR> -
+
+" jump
+noremap <Tab> *
+noremap <S-Tab> #
+noremap <BS> `
+noremap <BS><BS> ``
+noremap w {
+noremap W <C-o>
+noremap d }
+noremap D <C-i>
+noremap v G
+noremap ! gD
 noremap f n
 noremap F N
 noremap g L
 noremap G H
 noremap > M
-
-" jump
-noremap <BS> `
-noremap <BS><BS> ``
-noremap <Tab> *
-noremap <S-Tab> #
-noremap w {
-noremap d }
-noremap W <C-o>
-noremap D <C-i>
-noremap v G
-noremap ! gd
-
-" other
-noremap <Del> m
-noremap h y
-nnoremap hh yy
-noremap z @
-noremap Z q
-noremap L "
-nnoremap { :reg<CR>
-nnoremap q :set nospell<CR>
-nnoremap p :set spell<CR>
-nnoremap h zg
-nnoremap y zw
-nnoremap f :f<CR>
-nnoremap  :echo 'Current time is ' . strftime('%c')<CR>
-nnoremap <silent><S-> :tab new <bar> Startify<CR>
+noremap B /
+"" map b <Plug>(easymotion-sn)
+"" nmap <Space>... <Plug>(easymotion-...)
 
 " visual
 noremap j v
 noremap J V
 noremap $ <C-v>
 noremap ¥ gv
+"" map € <Plug>(expand_region_shrink)
+"" map ₽ <Plug>(expand_region_expand)
 
-" folding
+" change
+"" nmap q <Plug>SpeedDatingUp   " increase number/date
+"" nmap Q <Plug>SpeedDatingDown " decrease number/date
+noremap ~ gU
+noremap ° gu
+"" default p/P
+noremap – gp
+noremap — gP
+noremap H ~
+noremap ’ g~
+nnoremap y u
+noremap Y <C-r>
+nnoremap \ u
+nnoremap & U
+noremap x >
+noremap X <
+noremap @ J
+noremap § gJ
+noremap # gc
+noremap e c
+nnoremap ee cc
+noremap E r
+"" noremap + C " PM()
+nnoremap ± R
+nnoremap a .
+nnoremap A &
+"" default o/O
+"" default i/I
+noremap / A
+nnoremap ÷ 0i
+noremap u d
+nnoremap uu dd
+noremap U x
+noremap = X
+noremap ≠ "_d
+nnoremap ≠≠ "_dd
+
+" window
+noremap ( gT
+noremap [ gt
+"" nmap <silent> S :call comfortable_motion#flick(100)<CR>  " PM()
+noremap " zb
+noremap <Down> <C-e>
+"" nmap <silent> T :call comfortable_motion#flick(-100)<CR> " PM()
+noremap . zt
+noremap <Up> <C-y>
+noremap   zz
+
+" other
+noremap h y
+nnoremap hh yy
+nnoremap ' yy
+noremap z @
+noremap Z q
+noremap < @@
+noremap L "
+nnoremap { :reg<CR>
+"" default :
+noremap ^ @:
+noremap <Del> m
+nnoremap ? :noh<CR>
+nnoremap q :set nospell<CR>
+nnoremap p :set spell<CR>
+nnoremap h zg
+nnoremap y zw
+nnoremap f :f<CR>
+noremap t :Tabularize /
+nnoremap  :echo 'Current time is ' . strftime('%c')<CR>
+nnoremap <silent><S-> :tab new <bar> Startify<CR>
+
+" folds
 noremap zA <nop>
 noremap zC <nop>
 noremap zD <nop>
@@ -493,59 +563,11 @@ noremap <C-w>l <nop>
 noremap <C-w>b <nop>
 noremap <C-w>c <nop>
 
-" window
-noremap <CR> +
-noremap <S-CR> -
-nnoremap ? :noh<CR>
-noremap " zb
-noremap . zt
-noremap   zz
-noremap <Down> <C-e>
-noremap <Up> <C-y>
-noremap ( gT
-noremap [ gt
-
-" command-line
-noremap ^ @:
-noremap B /
-
-" change
-noremap ~ gU
-noremap ° gu
-noremap # gc
-noremap e c
-nnoremap ee cc
-nnoremap ± R
-noremap – gp
-noremap — gP
-noremap H ~
-noremap ’ g~
-nnoremap y u
-nnoremap \ u
-nnoremap & U
-noremap Y <C-r>
-noremap x >
-noremap X <
-noremap @ J
-noremap § gJ
-noremap E r
-nnoremap a .
-nnoremap A &
-nnoremap ÷ 0i
-noremap / x
-noremap u d
-nnoremap uu dd
-noremap U A
-noremap ≠ "_d
-noremap = X
-
-" plugins
-map € <Plug>(expand_region_shrink)
-map ₽ <Plug>(expand_region_expand)
-
+" <Plug>
 nmap q <Plug>SpeedDatingUp
 nmap Q <Plug>SpeedDatingDown
-
+map € <Plug>(expand_region_shrink)
+map ₽ <Plug>(expand_region_expand)
 map V <Plug>Commentary
 nmap VV <Plug>CommentaryLine
 
@@ -554,4 +576,27 @@ nmap <Space><Space> <Plug>(easymotion-overwin-f2)
 nmap <Space>s <Plug>(easymotion-overwin-line)
 nmap <Space>r <Plug>(easymotion-overwin-w)
 map b <Plug>(easymotion-sn)
+
+" insert mode
+"" qwerty-view (ง'̀-'́)ง
+inoremap <C-BS> <C-w>
+inoremap <C-f> <C-a>
+inoremap <C-q> <C-d>
+inoremap <C-w> <C-t>
+inoremap <C-a> <C-e>
+inoremap <C-s> <C-y>
+inoremap <C-d> <C-o>
+inoremap <C-v> <C-r>
+inoremap <C-v><C-v> <C-v>
+inoremap <C-z> <C-o>u
+"" media keys
+inoremap  <nop>
+inoremap  <nop>
+inoremap  <nop>
+inoremap  <nop>
+
+" command mode
+cnoremap <C-v> <C-r>
+cnoremap <C-v><C-f> <C-r><C-w>
+cnoremap <C-v><C-v> <C-v>
 
