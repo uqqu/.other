@@ -1,4 +1,4 @@
-﻿""" Config for stable nvim-qt v0.5.1/unstable v0.6 //30-10-2021
+﻿""" Config for stable nvim-qt v0.5.1/unstable v0.6 //31-10-2021
 "1. Plugins
 "2. Global_set's
 "3. autocmd
@@ -9,18 +9,22 @@
 "§ Plugins
 call plug#begin(stdpath('data') . '/plugged') "order by service, author name, repo name
     Plug 'dense-analysis/ale' "linter/fixer/...
+    Plug 'dominikduda/vim_current_word' "highlighting word under cursor and all of its occurences
     Plug 'easymotion/vim-easymotion' "search-jump movement
     Plug 'ehamberg/vim-cute-python' "conceal some python operators
-    Plug 'godlygeek/tabular' "line up text
+    Plug 'godlygeek/tabular' "called line up text
     Plug 'honza/vim-snippets' "snippets ¯\_(ツ)_/¯
         Plug 'SirVer/ultisnips' "snippet engine
     Plug 'konfekt/fastfold' "fix folding
+    Plug 'mbbill/undotree' "modal undo tree visualization
     Plug 'mhinz/vim-startify' "startpage
     Plug 'numirias/semshi', {'do': ':UpdateRemotePlugins'} "semantic highlighting for Python
     Plug 'plasticboy/vim-markdown' "improve MD highlighting, conceal, folding
     Plug 'raimondi/delimitmate' "brackets autocomplete
     Plug 'sainnhe/everforest' "colorscheme
     Plug 'terryma/vim-expand-region' "visually select increasingly larger/smaller regions
+    Plug 'tmhedberg/simpylfold' "improved python folding
+    Plug 'tomtom/quickfixsigns_vim' "marks/git diff visualization
     Plug 'tpope/vim-commentary' "fast commenting plugin
     Plug 'tpope/vim-speeddating' "correct (inc/dec)rease datetime text objects
     Plug 'tpope/vim-surround' "add surround operator (eg: ds', cs'[, ysiW', yss'[ (before remap))
@@ -80,7 +84,6 @@ set foldignore= "disable default unfolding lines which start with '#'
 set ignorecase smartcase "ignore case in search patterns (only if all characters are lowercase)
 set spelllang=en_us,ru_yo "set internal en_US and ru_ё spell check without enabling
 set spellfile=./utf-8.add "enable separate good/bad list for each file
-" set omnifunc=syntaxcomplete#Complete " TODO
 
 " other not 'set's
 syntax on
@@ -105,10 +108,6 @@ autocmd BufEnter,BufRead,BufNewFile *.vim silent! execute 'unmap <buffer> [['
 autocmd VimLeave * if &ft != 'startify' | try | bd! term | catch | | endtry
             \ | exe 'mksession! ' . $VIM . '\last_session.vim' | endif
 
-" two fold methods simultaneously cheat " TODO
-autocmd BufReadPre * setlocal foldmethod=syntax
-autocmd BufWinEnter * if &foldmethod == 'syntax' | setlocal foldmethod=manual | endif
-
 " external open files in existance process with python
 autocmd VimEnter * silent execute '!echo ' . v:servername . ' > "' . $VIM . '\\servername.txt"'
 autocmd VimLeave * silent execute '!del "' . $VIM . '\\servername.txt"'
@@ -130,11 +129,7 @@ autocmd BufAdd * call timer_start(166, {-> execute(
 let g:everforest_background = 'soft'
 let g:everforest_disable_italic_comment = 1
 let g:everforest_better_perfomace = 1
-"'need to test' group "coc;vim-lsp;ycm;ale;syntastic TODO
-    let g:everforest_diagnostic_text_highlight = 0
-    let g:everforest_diagnostic_line_highlight = 0
-    let g:everforest_diagnostic_virtual_text = 'colored'
-    let g:everforest_current_word = 'bold'
+let g:everforest_current_word = 'bold'
 colorscheme everforest "(define colorsheme after it's settings)
 
 " startify
@@ -144,6 +139,12 @@ for line in readfile($VIM . '\bookmarks.txt')
 endfor
 let g:startify_commands = [
             \   {'l': [' Last session', 'call LoadSession()']},
+            \ ]
+let g:startify_lists = [
+            \   {'type': 'files',     'header': ['      MRU']},
+            \   {'type': 'sessions',  'header': ['      Sessions']},
+            \   {'type': 'bookmarks', 'header': ['      Bookmarks']},
+            \   {'type': 'commands',  'header': ['      Commands']},
             \ ]
 let g:startify_session_before_save = ['silent! tabdo if &ft == "help" | q | endif']
 let g:startify_skiplist = ['/']
@@ -167,13 +168,6 @@ let g:airline_section_x = airline#section#create_right(['tagbar', 'filetype', '%
 let g:Powerline_symbols = 'unicode'
 let g:airline_extensions = ['ale', 'tabline', 'whitespace', 'wordcount'] "stable
 let g:airline_extensions += ['bufferline'] "temporary
-"'future test' group " TODO
-    "let g:airline_extensions += ['branch' (fugitive,gina), 'fugitiveline', 'coc', 'syntastic',
-            \ "'omniSharp', 'poet-v', 'battery', 'undotree', 'vim-virtualenv', 'ycm'] uncategor.
-    "let g:airline_extensions +=
-            \ "['hunks' (gitgutter,signify,changes,quickfixsigns,coc-git)] git diff
-    "let g:airline_extensions += ['gutentags', 'gen_tags', 'tagbar'] "ctags
-    "let g:airline_extensions += ['lsp', 'nvimlsp', 'vista'] "lsp
 
 "" airline-tabline
 let g:airline#extensions#tabline#enabled = 1
@@ -197,6 +191,7 @@ let g:ale_pattern_options = {
 let g:ale_lint_on_text_changed = 'never'
 let g:ale_lint_on_insert_leave = 0
 let g:ale_echo_msg_format = '[%linter%] %s [%severity%]'
+let g:ale_exclude_highlights = ['[pydocstyle]']
 
 "" ale linters
 let g:ale_linters = {
@@ -245,10 +240,16 @@ let g:EasyMotion_use_upper = 1
 let g:EasyMotion_smartcase = 1
 
 " other
-let g:UltiSnipsExpandTrigger="<Tab>"
-let g:UltiSnipsJumpForwardTrigger="<Tab>"
+let g:quickfixsigns_echo_map = ''
+let g:quickfixsigns_classes = ['qfl', 'loc', 'marks', 'breakpoints']
+let g:UltiSnipsExpandTrigger = '<Tab>'
+let g:UltiSnipsJumpForwardTrigger = '<Tab>'
 let g:bufferline_echo = 0 "disable additional echo on the command-line
 let g:codestats_api_key = $CODESTATS_API_KEY
+let g:semshi#mark_selected_nodes = 0
+let g:undotree_WindowLayout = 2
+let g:undotree_SetFocusWhenToggle = 1
+let g:undotree_ShortIndicators = 1
 let g:expand_region_text_objects = {
             \ 'iw': 0, 'iW': 0, 'i"': 1, 'i''': 1, 'i]': 1,
             \ 'ib': 1, 'iB': 1, 'il': 1, 'ip': 1, 'ie': 0,
@@ -527,6 +528,7 @@ nnoremap f :f<CR>
 noremap t :Tabularize /
 nnoremap  :echo 'Current time is ' . strftime('%c')<CR>
 nnoremap <silent><S-> :tab new <bar> Startify<CR>
+noremap <F1> :UndotreeToggle<CR>
 
 " folds
 noremap zA <nop>
@@ -590,10 +592,11 @@ inoremap <C-v> <C-r>
 inoremap <C-v><C-v> <C-v>
 inoremap <C-z> <C-o>u
 "" media keys
-inoremap  <nop>
-inoremap  <nop>
-inoremap  <nop>
 inoremap  <nop>
+inoremap  <nop>
+inoremap  <nop>
+inoremap  <nop>
+inoremap  <nop>
 
 " command mode
 cnoremap <C-v> <C-r>
