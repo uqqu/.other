@@ -1,17 +1,17 @@
-﻿September 06
-
+﻿November 03 / September 06
 3 symb:
-	total available nicknames – 3.449
-	starts with letter – 735
-	contain only letters/numbers – 0
-	with "-" – 3 (4-f, 6-f, 6-j)
-	two identical symbols in a row – 4 (q55, 0ww, 44w, 5qq)
-	two identical symbols through one symbol – 1 (5p5)
-	starts with "a" – 1 (a8b)
-	starts with "m" – 0
-	most unusable letter – "q" (453 matches)
-	most unusable number – "8" (732 matches)
+	total available nicknames – 2.786 / 3.449
+	starts with letter – 542 / 735
+	contain only letters/numbers – 1 (bpe) / (0)
+	with "-" – 2 (6-f, 6-j) / 3 (4-f, 6-f, 6-j)
+	two identical symbols in a row – 0 / 4 (q55, 0ww, 44w, 5qq)
+	two identical symbols through one symbol – 1 (5p5) / 1 (5p5)
+	starts with "a" – 0 / 1 (a8b)
+	starts with "m" – 1 (ml8) / 0
+	most unusable letter – "q" (365 matches) / "q" (453)
+	most unusable number – "6" (613 matches) / "8" (732)
 
+September 06
 4 symb (without numbers!):
 	total available nicknames – 159.168
 	with "-" – 17.596
