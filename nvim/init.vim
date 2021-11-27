@@ -104,6 +104,8 @@ autocmd BufEnter,BufRead,BufNewFile *.vim silent! execute 'unmap <buffer> [['
             \ | silent! execute 'unmap <buffer> []'
             \ | silent! execute 'unmap <buffer> ["'
 
+autocmd BufEnter,BufRead,BufNewFile *.md setlocal textwidth=0
+
 " sessions
 autocmd VimLeave * if &ft != 'startify' | try | bd! term | catch | | endtry
             \ | exe 'mksession! ' . $VIM . '\last_session.vim' | endif
@@ -421,7 +423,7 @@ noremap s j
 noremap t k
 noremap r l
 noremap R w
-noremap , $l
+noremap , $
 noremap <Right> W
 noremap n f
 noremap N F
@@ -527,7 +529,7 @@ nnoremap y zw
 nnoremap f :f<CR>
 noremap t :Tabularize /
 nnoremap  :echo 'Current time is ' . strftime('%c')<CR>
-nnoremap <silent><S-> :tab new <bar> Startify<CR>
+nnoremap <silent>s :tab new <bar> Startify<CR>
 noremap <F1> :UndotreeToggle<CR>
 
 " folds
