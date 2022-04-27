@@ -88,7 +88,6 @@ set spellfile=./utf-8.add "enable separate good/bad list for each file
 " other not 'set's
 syntax on
 filetype plugin indent on
-let g:python3_host_prog = $PYTHON_PATH
 call rpcnotify(1, 'Gui', 'Option', 'Tabline', 0) "for properly airline tabs work
 call rpcnotify(0, 'Gui', 'Font', 'InconsolataLGC NF:h11') "set fontname:size
 
@@ -108,11 +107,11 @@ autocmd BufEnter,BufRead,BufNewFile *.md setlocal textwidth=0
 
 " sessions
 autocmd VimLeave * if &ft != 'startify' | try | bd! term | catch | | endtry
-            \ | exe 'mksession! ' . $VIM . '\last_session.vim' | endif
+            \ | exe 'mksession! c:\temp\nvim\last_session.vim' | endif
 
 " external open files in existance process with python
-autocmd VimEnter * silent execute '!echo ' . v:servername . ' > "' . $VIM . '\\servername.txt"'
-autocmd VimLeave * silent execute '!del "' . $VIM . '\\servername.txt"'
+autocmd VimEnter * silent execute '!echo ' . v:servername . ' > "c:\temp\nvim\servername.txt"'
+autocmd VimLeave * silent execute '!del "c:\temp\nvim\servername.txt"'
 
 " other
 autocmd User ALEFixPost execute('Semshi highlight')
@@ -265,8 +264,8 @@ let g:WebDevIconsUnicodeDecorateFileNodesPatternSymbols = {
 "§ Functions
 function LoadSession()
     """Restore last autosaved session. Called by Startify menu."""
-    if (filereadable(expand($VIM . '\last_session.vim')))
-        silent! exe 'source ' . $VIM . '\last_session.vim'
+    if (filereadable(expand('c:\temp\nvim\last_session.vim')))
+        silent! exe 'source c:\temp\nvim\last_session.vim'
         silent! call DeleteEmptyBuffers()
     else
         echo 'No session loaded'

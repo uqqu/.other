@@ -7,25 +7,24 @@ If Neovim has existing process, check isn't file already open in any tab.
     Else: switch to tab with calling file.
 Аt the end is called LWin+q hotkey,
     which on the third-party 'qphyx.exe' script responsible for activate Nvim window.
-To be able to get the existing Nvim process, init.vim config must have the following lines:
-> autocmd VimEnter * silent execute '!echo ' . v:servername . ' > "' . $VIM . '\\servername.txt"'
-> autocmd VimLeave * silent execute '!del "' . $VIM . '\\servername.txt"'
+To be able to get the existing Nvim process, init.vim config must contain the following lines:
+> autocmd VimEnter * silent execute '!echo ' . v:servername . ' > "c:\temp\nvim\servername.txt"'
+> autocmd VimLeave * silent execute '!del "c:\temp\nvim\servername.txt"'
 '''
 
 import sys
 import neovim
 from os import path
-from subprocess import call  # nosec
+from subprocess import Popen  # nosec
 from psutil import process_iter
 from pynput.keyboard import Key, Controller
 
 
 if __name__ == '__main__' and len(sys.argv) > 1:
-    servername_path = 'C:\\Program Files\\Neovim\\share\\nvim\\servername.txt'
+    servername_path = 'C:\\temp\\nvim\\servername.txt'
     if not path.isfile(servername_path):
-        call(['C:\\Program Files\\Neovim\\bin\\nvim-qt.exe', sys.argv[1]])
+        Popen(['C:\\Program Files\\Neovim\\bin\\nvim-qt.exe', sys.argv[1]])
         sys.exit()
-
     with open(servername_path, mode='rt') as f:
         line = f.readline()
         servername = line.strip('\r\n ')
@@ -51,7 +50,7 @@ if __name__ == '__main__' and len(sys.argv) > 1:
 
     nvim.close()
 
-    if 'qphyx.exe' in (proc.name() for proc in process_iter()):
+    if 'qphyx' in (proc.name().split('.')[0] for proc in process_iter()):
         keyboard = Controller()
         keyboard.press(Key.cmd_l)
         keyboard.press('q')
