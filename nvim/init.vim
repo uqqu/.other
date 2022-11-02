@@ -1,10 +1,10 @@
-﻿""" Config for stable nvim-qt v0.5.1/unstable v0.6 //31-10-2021
+﻿""" Config for stable nvim-qt v0.8/unstable v0.9 //01-11-2022
 "1. Plugins
 "2. Global_set's
 "3. autocmd
 "4. Plugin_settings
 "5. Functions
-"6. Mapping
+"6. Mappings
 
 "§ Plugins
 call plug#begin(stdpath('data') . '/plugged') "order by service, author name, repo name
@@ -51,6 +51,7 @@ set textwidth=98 "used by formatoptions 't','c'. 'formatoptions' controlled by ?
 set completeopt=menuone,preview,noinsert "autocomplete menu (see :h)
 set linespace=1 "number of pixel lines inserted between characters. depends on the current font
 set conceallevel=2 "h: concealed text is hidden unless it has a custom replacement character
+set cmdheight=2 "two lines height for the bottom command-line/output line
 
 " key behavior
 set mouse=a "enable mouse for all modes
@@ -89,7 +90,6 @@ set spellfile=./utf-8.add "enable separate good/bad list for each file
 syntax on
 filetype plugin indent on
 call rpcnotify(1, 'Gui', 'Option', 'Tabline', 0) "for properly airline tabs work
-call rpcnotify(0, 'Gui', 'Font', 'InconsolataLGC NF:h11') "set fontname:size
 
 
 "§ autocmd
@@ -105,23 +105,28 @@ autocmd BufEnter,BufRead,BufNewFile *.vim silent! execute 'unmap <buffer> [['
 
 autocmd BufEnter,BufRead,BufNewFile *.md setlocal textwidth=0
 
+" terminal
+autocmd WinLeave * if &buftype == "terminal" | bd! term | endif
+autocmd BufAdd * call timer_start(66, {-> execute(
+            \ 'if &buftype == "terminal" | map <silent><buffer> q :q<CR>| startinsert | endif')})
+
 " sessions
-autocmd VimLeave * if &ft != 'startify' | try | bd! term | catch | | endtry
+autocmd VimLeave * if &filetype != 'startify' | try | bd! term | catch | | endtry
             \ | exe 'mksession! c:\temp\nvim\last_session.vim' | endif
 
-" external open files in existance process with python
+" for external python script file opener to open in an existing process
 autocmd VimEnter * silent execute '!echo ' . v:servername . ' > "c:\temp\nvim\servername.txt"'
 autocmd VimLeave * silent execute '!del "c:\temp\nvim\servername.txt"'
 
 " other
-autocmd User ALEFixPost execute('Semshi highlight')
+autocmd User ALEFixPost if &filetype == 'python' | execute('Semshi highlight')
 autocmd BufWritePost *.bat,*.cmd silent execute 'w! ++enc=cp1250'
 autocmd VimEnter * call GuiWindowFullScreen(1) | call PluginMappings()
 autocmd BufWinEnter *.txt if &filetype == 'help' | wincmd L
             \ | execute 'map <silent><buffer> q :q<CR>' | endif
-autocmd BufAdd * call timer_start(166, {-> execute(
+autocmd BufAdd * call timer_start(66, {-> execute(
             \ 'if len(getbufinfo({"buflisted":1})) > tabpagenr("$")
-            \ && &bt == "" && &ft[:2] != "ale" | tab ball')})
+            \ && &buftype == "" && &filetype[:2] != "ale" | tab ball | endif')})
             \ "simulate behavior like 1buffer=1tab
 
 
@@ -147,7 +152,7 @@ let g:startify_lists = [
             \   {'type': 'bookmarks', 'header': ['      Bookmarks']},
             \   {'type': 'commands',  'header': ['      Commands']},
             \ ]
-let g:startify_session_before_save = ['silent! tabdo if &ft == "help" | q | endif']
+let g:startify_session_before_save = ['silent! tabdo if &filetype == "help" | q | endif']
 let g:startify_skiplist = ['/']
 let g:startify_padding_left = 6
 let g:startify_session_sort = 1
@@ -167,19 +172,20 @@ let g:airline_highlighting_cache = 1
 let g:airline_powerline_fonts = 1
 let g:airline_section_x = airline#section#create_right(['tagbar', 'filetype', '%{CodeStatsXp()}'])
 let g:Powerline_symbols = 'unicode'
-let g:airline_extensions = ['ale', 'tabline', 'whitespace', 'wordcount'] "stable
-let g:airline_extensions += ['bufferline'] "temporary
+let g:airline_extensions = ['ale', 'tabline', 'whitespace', 'wordcount']
 
 "" airline-tabline
 let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#tabline#formatter = 'unique_tail'
+let g:airline#extensions#tabline#tabs_label = ''
 let g:airline#extensions#tabline#left_sep = ''
-let g:airline#extensions#tabline#show_tab_count = 2
-let g:airline#extensions#tabline#show_buffers = 0
-let g:airline#extensions#tabline#show_splits = 0
-let g:airline#extensions#tabline#show_tab_nr = 0
-let g:airline#extensions#tabline#show_tab_type = 0
 let g:airline#extensions#tabline#show_close_button = 0
+let g:airline#extensions#tabline#show_buffers = 0
+let g:airline#extensions#tabline#show_splits = 1
+let g:airline#extensions#tabline#show_tab_count = 2
+let g:airline#extensions#tabline#show_tab_nr = 1
+let g:airline#extensions#tabline#show_tab_type = 1
+let g:airline#extensions#tabline#tab_nr_type = 1
 
 " ale main
 let g:ale_virtualtext_cursor = 1
@@ -196,9 +202,11 @@ let g:ale_exclude_highlights = ['[pydocstyle]']
 
 "" ale linters
 let g:ale_linters = {
-            \   'python': ['bandit', 'mypy', 'pydocstyle', 'pylint', 'flake8', 'vulture'],
+            \   'python': ['bandit', 'mypy', 'pydocstyle', 'pylint', 'flake8'],
             \ }
+            \ "vulture?
 let g:ale_python_bandit_options = '--skip=B608'
+            \ "B608 – hardcoded_sql_expressions (i.e. f”SELECT foo FROM bar WHERE id = {product}”.
 let g:ale_python_mypy_options = '--ignore-missing-imports --cache-dir "c:\temp\.mypy_cache"'
             \ "disable error 'Mypy will not try inferring the types of any 3rd party libs ...';
             \ "set custom folder for mypy cache.
@@ -211,13 +219,14 @@ let g:ale_python_pydocstyle_options = '--ignore=D105,D107,D203,D213,D300'
             \ "D300 − Use “””triple double quotes”””.
 let g:ale_python_pylint_use_msg_id = 1
 let g:ale_python_pylint_options =
-            \ '--disable C0103,C0411,W1203 --load-plugins pylint_flask,pylint_flask_sqlalchemy'
+            \ '--disable C0103,C0411,W1203 '
+            \ . '--load-plugins pylint_flask,pylint_flask_sqlalchemy,pylint_django '
             \ . '--persistent n'
             \ "C0103 – Constant name ... doesn't conform to UPPER_CASE naming style;
             \   "but C0103 react on local 'temporarily-constants' which aren't really constants;
             \ "C0411 – Standard import 'from ...' should be placed before 'import ...';
             \ "W1203 – Use %s formatting in logging functions;
-            \ "Add flask and flask-sqlalchemy support;
+            \ "Add flask, flask-sqlalchemy and django support;
             \ "Disable incorrect generation .stats files.
 let g:ale_python_flake8_options =
             \ '--max-line-length=99 --ignore=E203,W503'
@@ -225,9 +234,9 @@ let g:ale_python_flake8_options =
 "" ale fixers
 let g:ale_fixers = {
             \   '*': ['remove_trailing_lines', 'trim_whitespace'],
-            \   'python': ['black'],
-            \   'javascript': ['eslint'],
-            \ } "+? 'python': ['add_blank_lines_for_python_control_statements'] need to test
+            \   'python': ['black', 'isort'],
+            \   'css': ['css-beautify'],
+            \ }
 let g:ale_python_black_options =
             \ '-S -C -l 99'
             \ "allow to use single-quote character on docstrings;
@@ -295,9 +304,9 @@ endfunction
 
 let s:is_opacity_set = 0
 function OpacityToggle()
-    """Toggle opacity (90%/100%). Works only on nightly nvim-qt build."""
+    """Toggle opacity (80%/100%)."""
     let s:is_opacity_set = !s:is_opacity_set
-    execute('GuiWindowOpacity' . string(1-s:is_opacity_set/10.0))
+    execute('GuiWindowOpacity' . string(1-s:is_opacity_set/5.0))
 endfunction
 
 function UnMinify()
@@ -311,8 +320,8 @@ function UnMinify()
 endfunction
 
 
-"§ Mapping
-" custom mapping for qPhyx layout with symbol layers
+"§ Mappings
+" custom mappings for qPhyx layout with symbol layers
 
 function PluginMappings()
     """Un/remap conflicting plugin mappings."""
@@ -320,6 +329,12 @@ function PluginMappings()
     execute 'nmap ua' maparg('ds', 'n')
     execute 'nmap ha' maparg('ys', 'n')
     execute 'nmap hao' maparg('yss', 'n')
+    " ru
+    execute 'nmap еа' maparg('cs', 'n')
+    execute 'nmap уа' maparg('ds', 'n')
+    execute 'nmap ха' maparg('ys', 'n')
+    execute 'nmap хао' maparg('yss', 'n')
+
     unmap [z
     unmap [%
     unmap ys
@@ -338,7 +353,6 @@ function PluginMappings()
     unmap gcu
     unmap gcc
     unmap g%
-    unmap +
     unmap <C-a>
     unmap <C-x>
     noremap % ^
@@ -347,6 +361,9 @@ function PluginMappings()
     vmap T <nop>
     nmap <silent> S :call comfortable_motion#flick(100)<CR>
     nmap <silent> T :call comfortable_motion#flick(-100)<CR>
+    " ru
+    nmap <silent> С :call comfortable_motion#flick(100)<CR>
+    nmap <silent> Т :call comfortable_motion#flick(-100)<CR>
 endfunction
 
 function PythonMappings()
@@ -366,11 +383,25 @@ function PythonMappings()
     nnoremap <silent> <buffer> ;i :Semshi goto class next<CR>
     nnoremap <silent> <buffer> w :Semshi goto function prev<CR>
     nnoremap <silent> <buffer> d :Semshi goto function next<CR>
+    " ru
+    nnoremap <silent> <buffer> ;ф :ALEFix<CR>
+    nnoremap <silent> <buffer> ;ш :ALEPreviousWrap<CR>
+    nnoremap <silent> <buffer> ;д :ALENextWrap<CR>
+    nnoremap <silent> <buffer> ;р :Semshi rename<CR>
+    nnoremap <silent> <buffer> ;ц :Semshi highlight<CR>
+    nnoremap <silent> <buffer> ;е :Semshi error<CR>
+    nnoremap <silent> <buffer> ;у :Semshi goto unresolved first<CR>
+    nnoremap <silent> <buffer> ;а :Semshi goto parameterUnused<CR>
+    nnoremap <silent> <buffer> ;о :Semshi goto class prev<CR>
+    nnoremap <silent> <buffer> ;и :Semshi goto class next<CR>
+    nnoremap <silent> <buffer> ш :Semshi goto function prev<CR>
+    nnoremap <silent> <buffer> д :Semshi goto function next<CR>
 endfunction
 
 
 " global/misc
 command Term below split | resize 20 | term
+map <F10> :call OpacityToggle()<CR>
 map <F11> :call MaximizeToggle()<CR>
 tnoremap <Esc> <C-\><C-n>
 
@@ -456,7 +487,7 @@ noremap B /
 noremap j v
 noremap J V
 noremap $ <C-v>
-noremap ¥ gv
+noremap ¢ gv
 "" map € <Plug>(expand_region_shrink)
 "" map ₽ <Plug>(expand_region_expand)
 
@@ -527,7 +558,7 @@ nnoremap h zg
 nnoremap y zw
 nnoremap f :f<CR>
 noremap t :Tabularize /
-nnoremap  :echo 'Current time is ' . strftime('%c')<CR>
+nnoremap  :echo strftime('%c')<CR>
 nnoremap <silent>s :tab new <bar> Startify<CR>
 noremap <F1> :UndotreeToggle<CR>
 
@@ -592,6 +623,7 @@ inoremap <C-d> <C-o>
 inoremap <C-v> <C-r>
 inoremap <C-v><C-v> <C-v>
 inoremap <C-z> <C-o>u
+inoremap   <C-n>
 "" media keys
 inoremap  <nop>
 inoremap  <nop>
@@ -604,3 +636,100 @@ cnoremap <C-v> <C-r>
 cnoremap <C-v><C-f> <C-r><C-w>
 cnoremap <C-v><C-v> <C-v>
 
+
+" ru-layout duplicates
+"" movement
+noremap м h
+noremap М b
+noremap с j
+noremap т k
+noremap р l
+noremap Р w
+noremap н f
+noremap Н F
+noremap л %
+noremap ц ;
+noremap Ц ,
+
+"" jump
+noremap ш {
+noremap Ш <C-o>
+noremap д }
+noremap Д <C-i>
+noremap в G
+noremap ф n
+noremap Ф N
+noremap г L
+noremap Г H
+noremap Б /
+
+"" visual
+noremap й v
+noremap Й V
+
+"" change
+noremap п p
+noremap П P
+noremap Х ~
+nnoremap ы u
+noremap Ы <C-r>
+noremap я >
+noremap Я <
+noremap е c
+nnoremap ее cc
+noremap Е r
+nnoremap а .
+nnoremap А &
+nnoremap о o
+nnoremap О O
+nnoremap и i
+nnoremap И I
+noremap у d
+nnoremap уу dd
+noremap У x
+
+"" other
+noremap х y
+nnoremap хх yy
+noremap з @
+noremap З q
+noremap Л "
+nnoremap эю :set nospell<CR>
+nnoremap ёю :set nospell<CR>
+nnoremap эп :set spell<CR>
+nnoremap ёп :set spell<CR>
+nnoremap эх zg
+nnoremap ёх zg
+nnoremap эы zw
+nnoremap ёы zw
+nnoremap эф :f<CR>
+nnoremap ёф :f<CR>
+noremap эт :Tabularize /
+noremap ёт :Tabularize /
+nnoremap <silent>эс :tab new <bar> Startify<CR>
+nnoremap <silent>ёс :tab new <bar> Startify<CR>
+
+"" folds
+noremap кк za
+noremap ку zd
+noremap км zc
+noremap кр zo
+noremap ке zf
+noremap к! zE
+noremap кс zm
+noremap кт zr
+
+"" splits
+noremap <C-w>м <C-w>h
+noremap <C-w>с <C-w>j
+noremap <C-w>т <C-w>k
+noremap <C-w>р <C-w>l
+noremap <C-w>х <C-w>s
+noremap <C-w>у <C-w>c
+
+"" <Plug>
+nmap ю <Plug>SpeedDatingUp
+nmap Ю <Plug>SpeedDatingDown
+map В <Plug>Commentary
+nmap ВВ <Plug>CommentaryLine
+map б <Plug>(easymotion-sn)
